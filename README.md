@@ -31,9 +31,9 @@ export OPENAI_API_KEY="sk-..."
 export PROMPTAUDIT_LLM_PROVIDER="openai"   # openai | anthropic | gemini | ollama
 ```
 
-#### 시나리오 A — LLM 직접 호출 모드 (시스템 프롬프트만 있을 때)
+#### 시나리오 A — 화이트박스 모드 (시스템 프롬프트 제공)
 
-개발팀에서 시스템 프롬프트 내용만 받은 경우. 공격 시나리오를 동일 LLM에 직접 주입하여 취약성을 검증합니다.
+개발팀에서 시스템 프롬프트를 전달받은 경우. 해당 프롬프트에 특화된 공격 시나리오를 생성하여 정밀하게 취약성을 검증합니다.
 
 ```bash
 # 1. 개발팀에서 받은 시스템 프롬프트를 파일로 저장
@@ -50,12 +50,27 @@ promptaudit scan --system-prompt prompt.txt
 promptaudit scan --system-prompt prompt.txt --format markdown --out report.md
 ```
 
-#### 시나리오 B — HTTP 모드 (실제 서비스 엔드포인트 대상)
+#### 시나리오 B — 블랙박스 모드 (시스템 프롬프트 미제공)
 
-내부망에서 실제 운영 중인 AI 서비스 API를 직접 공격하여 실환경 취약성을 검증합니다.
+시스템 프롬프트를 알 수 없는 경우. OWASP LLM Top 10 기반 범용 기준으로 테스트합니다.
+내장된 기본 프롬프트(역할 고정 / 시스템 프롬프트 보호 / 유해 행위 거부 / 지시 무결성)가 자동 적용됩니다.
 
 ```bash
-# 실제 서비스 엔드포인트 대상 스캔
+# --system-prompt 생략 → 블랙박스 모드 자동 활성화
+promptaudit scan --target-url http://internal-ai-service/chat
+
+# 리포트에 블랙박스 모드 안내 문구가 표시됨:
+# [블랙박스 모드] 시스템 프롬프트 미제공 — 범용 AI 서비스 기준(OWASP LLM Top 10)으로 테스트했습니다.
+# 실제 시스템 프롬프트를 제공하면 더 정밀한 특화 공격 시나리오로 재스캔할 수 있습니다.
+```
+
+#### 시나리오 C — HTTP 모드 (실제 서비스 엔드포인트 대상)
+
+내부망에서 실제 운영 중인 AI 서비스 API를 직접 공격하여 실환경 취약성을 검증합니다.
+화이트박스/블랙박스 모드 모두 조합 가능합니다.
+
+```bash
+# 화이트박스 + HTTP 모드 (가장 정밀)
 promptaudit scan \
   --system-prompt prompt.txt \
   --target-url http://internal-ai-service/chat \
@@ -64,6 +79,11 @@ promptaudit scan \
   --max-attacks 5 \
   --format markdown \
   --out report.md
+
+# 블랙박스 + HTTP 모드 (시스템 프롬프트 모를 때)
+promptaudit scan \
+  --target-url http://internal-ai-service/chat \
+  --max-attacks 5
 ```
 
 #### CI/CD 보안 게이트
@@ -79,7 +99,7 @@ promptaudit scan --system-prompt prompt.txt --fail-on success
 
 | 옵션 | 기본값 | 설명 |
 |------|--------|------|
-| `--system-prompt` | 필수 | 시스템 프롬프트 파일 경로 |
+| `--system-prompt` | 생략 가능 | 시스템 프롬프트 파일 경로 (생략 시 블랙박스 모드) |
 | `--max-attacks` | 5 | 최대 공격 시나리오 수 (비용 제어) |
 | `--format` | markdown | 출력 형식 (`markdown` \| `json`) |
 | `--out` | 콘솔 출력 | 리포트 저장 파일 경로 |
