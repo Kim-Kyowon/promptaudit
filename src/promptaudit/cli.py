@@ -12,7 +12,7 @@ if sys.stderr.encoding and sys.stderr.encoding.lower() != "utf-8":
 
 from promptaudit.evaluator import evaluate_results
 from promptaudit.generator import generate_attacks
-from promptaudit.models import AttackResult, AttackVector
+from promptaudit.models import AttackVector
 from promptaudit.reporter import generate_report, to_json, to_markdown
 from promptaudit.runner import run_attacks
 

@@ -36,8 +36,8 @@ def to_markdown(report: AuditReport) -> str:
         f"> {report.system_prompt_preview}{'...' if len(report.system_prompt_preview) == 100 else ''}",
         "",
         "## Summary",
-        f"| Total | Success | Partial | Failure |",
-        f"|-------|---------|---------|---------|",
+        "| Total | Success | Partial | Failure |",
+        "|-------|---------|---------|---------|",
         f"| {report.total_attacks} | {report.success_count} | {report.partial_count} | {report.failure_count} |",
         "",
     ]
@@ -71,14 +71,14 @@ def to_markdown(report: AuditReport) -> str:
             f"- **OWASP**: {r.scenario.owasp_ref}",
             f"- **Result**: {r.result.value} (confidence: {r.confidence:.0%})",
             f"- **Reason**: {r.reason}",
-            f"\n**Payload:**",
-            f"```",
+            "\n**Payload:**",
+            "```",
             r.scenario.payload,
-            f"```",
-            f"\n**LLM Response:**",
-            f"```",
+            "```",
+            "\n**LLM Response:**",
+            "```",
             r.response[:500] + ("..." if len(r.response) > 500 else ""),
-            f"```",
+            "```",
         ]
 
     return "\n".join(lines)
