@@ -10,6 +10,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 if sys.stderr.encoding and sys.stderr.encoding.lower() != "utf-8":
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
+from promptaudit.defaults import BLACKBOX_MODE_NOTICE, DEFAULT_SYSTEM_PROMPT
 from promptaudit.evaluator import evaluate_results
 from promptaudit.generator import generate_attacks
 from promptaudit.models import AttackVector
@@ -25,7 +26,12 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_scan = sub.add_parser("scan", help="시스템 프롬프트 보안 스캔")
-    p_scan.add_argument("--system-prompt", required=True, help="시스템 프롬프트 파일 경로")
+    p_scan.add_argument(
+        "--system-prompt",
+        required=False,
+        default=None,
+        help="시스템 프롬프트 파일 경로 (생략 시 범용 기본 프롬프트로 블랙박스 테스트)",
+    )
     p_scan.add_argument(
         "--attack-types",
         default="direct",
@@ -68,15 +74,19 @@ def main() -> None:
 
 
 async def _scan(args: argparse.Namespace) -> None:
-    prompt_path = Path(args.system_prompt)
-    if not prompt_path.exists():
-        print(f"ERROR: 파일을 찾을 수 없습니다: {args.system_prompt}", file=sys.stderr)
-        sys.exit(1)
-
-    system_prompt = prompt_path.read_text(encoding="utf-8").strip()
-    if not system_prompt:
-        print("ERROR: 시스템 프롬프트가 비어 있습니다.", file=sys.stderr)
-        sys.exit(1)
+    blackbox = args.system_prompt is None
+    if blackbox:
+        system_prompt = DEFAULT_SYSTEM_PROMPT
+        print(f"[!] {BLACKBOX_MODE_NOTICE}", file=sys.stderr)
+    else:
+        prompt_path = Path(args.system_prompt)
+        if not prompt_path.exists():
+            print(f"ERROR: 파일을 찾을 수 없습니다: {args.system_prompt}", file=sys.stderr)
+            sys.exit(1)
+        system_prompt = prompt_path.read_text(encoding="utf-8").strip()
+        if not system_prompt:
+            print("ERROR: 시스템 프롬프트가 비어 있습니다.", file=sys.stderr)
+            sys.exit(1)
 
     vectors = [AttackVector(v.strip()) for v in args.attack_types.split(",")]
 

@@ -1,3 +1,4 @@
+from promptaudit.defaults import DEFAULT_SYSTEM_PROMPT
 from promptaudit.models import AttackResult, AttackScenario, AttackVector, EvaluatedResult
 from promptaudit.reporter import generate_report, to_json, to_markdown
 
@@ -81,3 +82,20 @@ def test_to_json_is_valid():
     assert data["total_attacks"] == 1
     assert data["partial_count"] == 1
     assert "results" in data
+
+
+def test_blackbox_mode_notice_in_markdown():
+    results = [_make_result(AttackResult.FAILURE)]
+    report = generate_report(results, DEFAULT_SYSTEM_PROMPT)
+    md = to_markdown(report)
+
+    assert "블랙박스 모드" in md
+    assert "시스템 프롬프트 미제공" in md
+
+
+def test_whitebox_mode_no_blackbox_notice():
+    results = [_make_result(AttackResult.FAILURE)]
+    report = generate_report(results, "You are a custom assistant.")
+    md = to_markdown(report)
+
+    assert "블랙박스 모드" not in md

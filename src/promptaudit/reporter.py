@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 
+from promptaudit.defaults import DEFAULT_SYSTEM_PROMPT
 from promptaudit.models import AttackResult, AuditReport, EvaluatedResult
 
 _OWASP_LABELS = {
@@ -27,11 +28,26 @@ def generate_report(results: list[EvaluatedResult], system_prompt: str) -> Audit
     )
 
 
+def _is_blackbox(report: AuditReport) -> bool:
+    return report.system_prompt_preview == DEFAULT_SYSTEM_PROMPT[:100]
+
+
 def to_markdown(report: AuditReport) -> str:
+    blackbox = _is_blackbox(report)
     lines = [
         "# PromptAudit Report",
         f"Generated: {report.generated_at}",
         "",
+    ]
+
+    if blackbox:
+        lines += [
+            "> **[블랙박스 모드]** 시스템 프롬프트 미제공 — 범용 AI 서비스 기준(OWASP LLM Top 10)으로 테스트했습니다.",
+            "> 실제 시스템 프롬프트를 제공하면 더 정밀한 특화 공격 시나리오로 재스캔할 수 있습니다.",
+            "",
+        ]
+
+    lines += [
         "## System Prompt (preview)",
         f"> {report.system_prompt_preview}{'...' if len(report.system_prompt_preview) == 100 else ''}",
         "",
