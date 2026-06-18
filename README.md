@@ -2,6 +2,10 @@
 
 **AI-Powered Prompt Injection Red-Team Automation Skill**
 
+[![CI](https://github.com/Kim-Kyowon/promptaudit/actions/workflows/ci.yml/badge.svg)](https://github.com/Kim-Kyowon/promptaudit/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
+
 AI 서비스의 시스템 프롬프트를 대상으로 Direct Injection 공격 시나리오를 자동 생성·실행·평가하여 OWASP LLM Top 10 기준 취약점 리포트를 출력하는 보안 자동화 Skill 패키지.
 
 ## 설치
